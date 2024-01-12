@@ -1,0 +1,14 @@
+RESOURCE_GROUP='OpenAI-Demo'
+LOCATION=eastus
+VNET_NAME='vnet-1'
+PV_SUBNET_NAME='PrivateLink-Subnet'
+CUSTOM_DOMAIN_NAME=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 24 | head -n 1)
+
+# Create a cognitive services account
+az cognitiveservices account create --name cog-svc --resource-group $RESOURCE_GROUP --kind SpeechServices --sku S0 --location $LOCATION --custom-domain $CUSTOM_DOMAIN_NAME
+
+# Get the resource ID of the cognitive services account
+resourceid=$(az cognitiveservices account show --name cog-svc --resource-group $RESOURCE_GROUP --query id --output tsv)
+
+# Create a private endpoint for the cognitive services account and connect it to the subnet
+# az network private-endpoint create --name cogsvs-PrivateEndPoint --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --subnet $PV_SUBNET_NAME --private-connection-resource-id $resourceid --group-id cognitiveservices --connection-name cogsvs-connection

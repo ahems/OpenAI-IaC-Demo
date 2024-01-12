@@ -1,0 +1,21 @@
+RESOURCE_GROUP='OpenAI-Demo'
+LOCATION=eastus
+VNET_NAME='vnet-1'
+PV_SUBNET_NAME='PrivateLink-Subnet'
+#KEYVAULT_NAME=kv$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 22 | head -n 1)
+KEYVAULT_NAME=$(az keyvault list --resource-group $RESOURCE_GROUP --query [0].name -o tsv)
+
+# Create a key vault
+# az keyvault create --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --location $LOCATION --public-network-access Disabled
+
+# Get the resource ID of the key vault
+export resourceid=$(az keyvault show --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --query id --output tsv)
+
+# Create a private endpoint for the key vault and connect it to the subnet
+az network private-endpoint create --name keyVault-privateEndpoint --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --subnet $PV_SUBNET_NAME --private-connection-resource-id $resourceid --group-id vault --connection-name keyvault-connection
+
+# Create a private DNS zone and link it to the virtual network
+az network private-dns zone create --name privatelink.vaultcore.azure.net --resource-group $RESOURCE_GROUP
+az network private-dns link vnet create --resource-group $RESOURCE_GROUP --zone-name privatelink.vaultcore.azure.net --name KeyVault-DNSLink --virtual-network $VNET_NAME --registration-enabled false
+
+az keyvault update --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --public-network-access Disabled

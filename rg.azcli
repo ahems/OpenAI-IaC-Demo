@@ -1,0 +1,4 @@
+RESOURCE_GROUP='OpenAI-Demo'
+LOCATION=eastus
+
+az group create --name $RESOURCE_GROUP --location $LOCATION

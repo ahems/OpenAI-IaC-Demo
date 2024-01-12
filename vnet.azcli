@@ -1,0 +1,21 @@
+RESOURCE_GROUP='OpenAI-Demo'
+LOCATION=eastus
+VNET_NAME='vnet-1'
+PV_SUBNET_NAME='PrivateLink-Subnet'
+VM_SUBNET_NAME='VM-Subnet'
+AML_SUBNET_NAME='AML-Subnet'
+
+az network vnet create --name $VNET_NAME --resource-group $RESOURCE_GROUP --address-prefix 10.0.0.0/16 --subnet-name $VM_SUBNET_NAME --subnet-prefixes 10.0.0.0/24
+
+az network vnet subnet create --name $PV_SUBNET_NAME --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --address-prefix 10.0.1.0/24
+az network vnet subnet create --name $AML_SUBNET_NAME --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --address-prefix 10.0.2.0/24
+
+# Create a subnet for Azure Bastion
+az network vnet subnet create --name AzureBastionSubnet --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --address-prefix 10.0.3.0/24
+
+az network nsg create --name nsg-1 --resource-group $RESOURCE_GROUP
+az network nsg rule create --name DenyInternetOutbound --nsg-name nsg-1 --priority 100 --access Deny --direction Outbound --destination-address-prefixes Internet --protocol '*'
+
+az network vnet subnet update --name $VM_SUBNET_NAME --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --network-security-group nsg-1
+az network vnet subnet update --name $AML_SUBNET_NAME --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --network-security-group nsg-1
+

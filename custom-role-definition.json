@@ -1,0 +1,25 @@
+{
+    "Name": "OpenAICustomRole",
+    "IsCustom": true,
+    "Description": "Custom Role Description",
+    "Actions": [
+      "Microsoft.Search/searchServices/read",
+      "Microsoft.Search/searchServices/write",
+      "Microsoft.CognitiveServices/accounts/read",
+      "Microsoft.CognitiveServices/accounts/write",
+      "Microsoft.Storage/storageAccounts/listKeys/action",
+      "Microsoft.Storage/storageAccounts/read",
+      "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+      "Microsoft.Storage/storageAccounts/blobServices/containers/write",
+      "Microsoft.Storage/storageAccounts/blobServices/containers/delete",
+      "Microsoft.MachineLearningServices/workspaces/read",
+      "Microsoft.MachineLearningServices/workspaces/write"
+    ],
+    "NotActions": [],
+    "DataActions": [],
+    "NotDataActions": [],
+    "AssignableScopes": [
+      "/subscriptions/9b2ea9df-a9fd-40e2-95f6-64062aee33f4/resourceGroups/OpenAI-Demo"
+    ]
+  }
+  
