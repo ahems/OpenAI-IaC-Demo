@@ -1,2 +1,4 @@
  RESOURCE_GROUP='OpenAI-Demo'
  az group delete -n $RESOURCE_GROUP -y
+
+ az role definition delete --name OpenAICustomRole

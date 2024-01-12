@@ -1,10 +1,10 @@
 RESOURCE_GROUP='OpenAI-Demo'
 VNET_NAME='vnet-1'
 PV_SUBNET_NAME='PrivateLink-Subnet'
-# STORAGE_NAME=a$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 23 | head -n 1)
-STORAGE_NAME="$(az storage account list --resource-group $RESOURCE_GROUP --query [0].name -o tsv)"
+STORAGE_NAME=a$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 23 | head -n 1)
+# STORAGE_NAME="$(az storage account list --resource-group $RESOURCE_GROUP --query [0].name -o tsv)"
 
-# az storage account create --name $STORAGE_NAME --resource-group $RESOURCE_GROUP --sku Standard_LRS --kind StorageV2 --enable-large-file-share
+az storage account create --name $STORAGE_NAME --resource-group $RESOURCE_GROUP --sku Standard_LRS --kind StorageV2 --enable-large-file-share
 
 az network private-endpoint create --name storage-privateLink --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --subnet $PV_SUBNET_NAME --private-connection-resource-id $(az storage account show --name $STORAGE_NAME --resource-group $RESOURCE_GROUP --query id --output tsv) --group-id blob --connection-name storage-connection
 az network private-dns zone create --name privatelink.blob.core.windows.net --resource-group $RESOURCE_GROUP

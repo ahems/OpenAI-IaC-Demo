@@ -3,10 +3,10 @@
 ./rg.azcli
 ./vnet.azcli
 ./role.azcli
-./aml.azcli
 ./acr.azcli
 ./kv.azcli
 ./storage.azcli
+./aml.azcli
 ./cogsvs.azcli
-./openai.azcli
 ./vm.azcli
+./role-assign.azcli

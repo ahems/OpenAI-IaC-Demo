@@ -13,7 +13,6 @@ az login --use-device-code
 chmod +x vnet.azcli
 chmod +x acr.azcli
 chmod +x cogsvs.azcli
-chmod +x openai.azcli
 chmod +x storage.azcli
 chmod +x vm.azcli
 chmod +x kv.azcli
@@ -22,6 +21,7 @@ chmod +x delete.azcli
 chmod +x role.azcli
 chmod +x deploy.sh
 chmod +x rg.azcli
+chmod +x role-assign.azcli
 
 # Deploy:
 ./deploy.sh

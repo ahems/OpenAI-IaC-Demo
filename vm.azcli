@@ -3,17 +3,18 @@ LOCATION=eastus
 VNET_NAME='vnet-1'
 VM_SUBNET_NAME='VM-Subnet'
 VM_NAME='myVM'
-VM_IMAGE='Ubuntu2204'
+VM_IMAGE='Win2022Datacenter'
 ADMIN_USERNAME='azureuser'
+VM_SIZE=Standard_D4ads_v5
 
 # Create a network interface and associate it with the subnet and the NSG
 az network nic create --name myNic --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --subnet $VM_SUBNET_NAME
 
 # Create a virtual machine without a public IP address and attach the network interface
-az vm create --name $VM_NAME --resource-group $RESOURCE_GROUP --image $VM_IMAGE --admin-username $ADMIN_USERNAME --generate-ssh-keys --public-ip-address "" --nics myNic
+az vm create --name $VM_NAME --resource-group $RESOURCE_GROUP --image $VM_IMAGE --admin-username $ADMIN_USERNAME --public-ip-address "" --nics myNic --size $VM_SIZE --no-wait
 
 # Create a public IP address for Azure Bastion
 az network public-ip create --name BastionIP --resource-group $RESOURCE_GROUP --sku Standard --location $LOCATION
 
 # Create an Azure Bastion host
-az network bastion create --name BastionHost --public-ip-address BastionIP --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --location $LOCATION
+az network bastion create --name BastionHost --public-ip-address BastionIP --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --location $LOCATION --no-wait

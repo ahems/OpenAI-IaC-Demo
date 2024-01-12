@@ -5,10 +5,22 @@ PV_SUBNET_NAME='PrivateLink-Subnet'
 CUSTOM_DOMAIN_NAME=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 24 | head -n 1)
 
 # Create a cognitive services account
-az cognitiveservices account create --name cog-svc --resource-group $RESOURCE_GROUP --kind SpeechServices --sku S0 --location $LOCATION --custom-domain $CUSTOM_DOMAIN_NAME
+# Kind: az cognitiveservices account list-kinds
+az cognitiveservices account create --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP --kind AIServices --sku S0 --location $LOCATION --custom-domain $CUSTOM_DOMAIN_NAME
 
 # Get the resource ID of the cognitive services account
-resourceid=$(az cognitiveservices account show --name cog-svc --resource-group $RESOURCE_GROUP --query id --output tsv)
+resourceid=$(az cognitiveservices account show --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP --query id --output tsv)
 
 # Create a private endpoint for the cognitive services account and connect it to the subnet
-# az network private-endpoint create --name cogsvs-PrivateEndPoint --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --subnet $PV_SUBNET_NAME --private-connection-resource-id $resourceid --group-id cognitiveservices --connection-name cogsvs-connection
+az network private-endpoint create --name cogsvs-PrivateEndPoint --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --subnet $PV_SUBNET_NAME --private-connection-resource-id $resourceid --group-id account --connection-name cogsvs-connection
+
+az network private-dns zone create --name privatelink.cognitiveservices.azure.com --resource-group $RESOURCE_GROUP
+az network private-dns link vnet create --name cogsvs-privateDnsLink --resource-group $RESOURCE_GROUP --virtual-network $VNET_NAME --zone-name privatelink.cognitiveservices.azure.com --registration-enabled false
+az network private-dns record-set a create --name $WORKSPACE_NAME --zone-name privatelink.cognitiveservices.azure.com --resource-group $RESOURCE_GROUP
+az network private-dns record-set a add-record --record-set-name $WORKSPACE_NAME --zone-name privatelink.cognitiveservices.azure.com --resource-group $RESOURCE_GROUP --ipv4-address $(az network private-endpoint show --name cogsvs-privateEndpoint --resource-group $RESOURCE_GROUP --query "customDnsConfigs[0].ipAddresses[0]" --output tsv)
+
+az network private-dns zone create --name privatelink.openai.azure.com --resource-group $RESOURCE_GROUP
+az network private-dns link vnet create --name cogsvs-openai-privateDnsLink --resource-group $RESOURCE_GROUP --virtual-network $VNET_NAME --zone-name privatelink.openai.azure.com --registration-enabled false
+az network private-dns record-set a create --name $WORKSPACE_NAME --zone-name privatelink.openai.azure.com --resource-group $RESOURCE_GROUP
+az network private-dns record-set a add-record --record-set-name $WORKSPACE_NAME --zone-name privatelink.openai.azure.com --resource-group $RESOURCE_GROUP --ipv4-address $(az network private-endpoint show --name cogsvs-privateEndpoint --resource-group $RESOURCE_GROUP --query "customDnsConfigs[1].ipAddresses[0]" --output tsv)
+

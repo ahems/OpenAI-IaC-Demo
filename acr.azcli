@@ -2,11 +2,11 @@ RESOURCE_GROUP='OpenAI-Demo'
 LOCATION=eastus
 VNET_NAME='vnet-1'
 PV_SUBNET_NAME='PrivateLink-Subnet'
-# ACR_NAME=acr$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 24 | head -n 1)
-ACR_NAME="$(az acr list --resource-group $RESOURCE_GROUP --query [0].name -o tsv)"
+ACR_NAME=acr$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 24 | head -n 1)
+# ACR_NAME="$(az acr list --resource-group $RESOURCE_GROUP --query [0].name -o tsv)"
 
 # Create a container registry
-# az acr create --name $ACR_NAME --resource-group $RESOURCE_GROUP --sku Premium --admin-enabled true --public-network-enabled false
+az acr create --name $ACR_NAME --resource-group $RESOURCE_GROUP --sku Premium --admin-enabled true --public-network-enabled false
 
 # Get the resource ID of the container registry
 export resourceid=$(az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP --query id --output tsv)

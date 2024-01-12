@@ -1,13 +1,8 @@
 IDENTITY_NAME='aml-identity'
-ROLE_NAME='OpenAICustomRole'
 RESOURCE_GROUP='OpenAI-Demo'
-IDENTITY_NAME='aml-identity'
-SUBSCRIPTION_ID=$(az account show --query id --output tsv)
 LOCATION=eastus
 
 az role definition create --role-definition custom-role-definition.json
 
 az identity create --name $IDENTITY_NAME --resource-group $RESOURCE_GROUP --location $LOCATION
-OBJECT_ID=$(az ad sp list --display-name $IDENTITY_NAME --query '[].id' --output tsv)
 
-az role assignment create --assignee-object-id $OBJECT_ID --role $ROLE_NAME --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP
