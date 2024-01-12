@@ -7,7 +7,6 @@ ACR_NAME="$(az acr list --resource-group $RESOURCE_GROUP --query [0].name -o tsv
 LOCATION=eastus
 IDENTITY_NAME='aml-identity'
 
-az extension add --name azure-cli-ml
 # az ml workspace create --workspace-name myWorkspace --resource-group $RESOURCE_GROUP --managed-network $VNET_NAME --public-network-access Disabled --enable-data-isolation true --key-vault $KEYVAULT_NAME --container-registry $ACR_NAME
 az ml workspace create --workspace-name myWorkspace --resource-group $RESOURCE_GROUP
 
