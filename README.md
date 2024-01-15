@@ -22,9 +22,13 @@ chmod +x role.azcli
 chmod +x deploy.sh
 chmod +x rg.azcli
 chmod +x role-assign.azcli
+chmod +x ./delete-then-deploy.sh
 
 # Deploy:
 ./deploy.sh
+
+# Clean Up first then Deploy:
+./delete-then-deploy.sh
 
 # Clean Up
 ./delete.azcli

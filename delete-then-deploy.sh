@@ -1,0 +1,2 @@
+./delete.azcli
+./deploy.sh

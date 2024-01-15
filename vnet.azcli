@@ -14,7 +14,6 @@ az network vnet subnet create --name $AML_SUBNET_NAME --resource-group $RESOURCE
 az network vnet subnet create --name AzureBastionSubnet --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --address-prefix 10.0.3.0/24
 
 az network nsg create --name nsg-1 --resource-group $RESOURCE_GROUP
-az network nsg rule create --name DenyInternetOutbound --nsg-name nsg-1 --priority 100 --access Deny --direction Outbound --destination-address-prefixes Internet --protocol '*' --resource-group $RESOURCE_GROUP
 
 az network vnet subnet update --name $VM_SUBNET_NAME --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --network-security-group nsg-1
 az network vnet subnet update --name $AML_SUBNET_NAME --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --network-security-group nsg-1

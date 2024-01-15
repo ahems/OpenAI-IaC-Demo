@@ -1,6 +1,5 @@
 RESOURCE_GROUP='OpenAI-Demo'
 VNET_NAME='vnet-1'
-AML_SUBNET_NAME='AML-Subnet'
 PV_SUBNET_NAME='PrivateLink-Subnet'
 KEYVAULT_NAME=$(az keyvault list --resource-group $RESOURCE_GROUP --query [0].id -o tsv)
 ACR_NAME="$(az acr list --resource-group $RESOURCE_GROUP --query [0].id -o tsv)"
@@ -10,7 +9,8 @@ LOCATION=eastus
 IDENTITY_NAME='aml-identity'
 WORKSPACE_NAME=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 24 | head -n 1)
 
-az extension add --name ml
+# If you get errors you might need to manually add the ml az extension; uncomment line below
+# az extension add --name ml
 
 az identity create --name $IDENTITY_NAME --resource-group $RESOURCE_GROUP --location $LOCATION
 IDENTITY_ID="$(az identity list --resource-group $RESOURCE_GROUP --query [0].id -o tsv)"
@@ -18,11 +18,13 @@ IDENTITY_ID="$(az identity list --resource-group $RESOURCE_GROUP --query [0].id 
 az ml workspace create --name $WORKSPACE_NAME --resource-group $RESOURCE_GROUP --public-network-access 'Disabled' --managed-network allow_only_approved_outbound --key-vault $KEYVAULT_NAME --container-registry $ACR_NAME --storage-account $STORAGE_NAME
 
 az network private-endpoint create --name aml-privateEndpoint --connection-name aml-connection --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --subnet $PV_SUBNET_NAME --private-connection-resource-id $(az ml workspace show --name $WORKSPACE_NAME --resource-group $RESOURCE_GROUP --query id --output tsv) --group-id amlworkspace
+
 az network private-dns zone create --name privatelink.api.azureml.ms --resource-group $RESOURCE_GROUP
 az network private-dns link vnet create --name aml-privateDnsLink --resource-group $RESOURCE_GROUP --virtual-network $VNET_NAME --zone-name privatelink.api.azureml.ms --registration-enabled false
 az network private-dns record-set a create --name $WORKSPACE_NAME --zone-name privatelink.api.azureml.ms --resource-group $RESOURCE_GROUP
 az network private-dns record-set a add-record --record-set-name $WORKSPACE_NAME --zone-name privatelink.api.azureml.ms --resource-group $RESOURCE_GROUP --ipv4-address $(az network private-endpoint show --name aml-privateEndpoint --resource-group $RESOURCE_GROUP --query "customDnsConfigs[0].ipAddresses[0]" --output tsv)
 
-az ml workspace provision-network --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP
-az ml workspace update --resource-group $RESOURCE_GROUP --name $CUSTOM_DOMAIN_NAME --public-network-access Disabled
-
+az network private-dns zone create --name privatelink.notebooks.azureml.ms --resource-group $RESOURCE_GROUP
+az network private-dns link vnet create --name aml-notebooks-privateDnsLink --resource-group $RESOURCE_GROUP --virtual-network $VNET_NAME --zone-name privatelink.notebooks.azureml.ms --registration-enabled false
+az network private-dns record-set a create --name $WORKSPACE_NAME --zone-name privatelink.notebooks.azureml.ms --resource-group $RESOURCE_GROUP
+az network private-dns record-set a add-record --record-set-name $WORKSPACE_NAME --zone-name privatelink.notebooks.azureml.ms --resource-group $RESOURCE_GROUP --ipv4-address $(az network private-endpoint show --name aml-privateEndpoint --resource-group $RESOURCE_GROUP --query "customDnsConfigs[2].ipAddresses[0]" --output tsv)
