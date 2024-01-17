@@ -2,8 +2,8 @@ RESOURCE_GROUP='OpenAI-Demo'
 LOCATION=eastus
 VNET_NAME='vnet-1'
 PV_SUBNET_NAME='PrivateLink-Subnet'
-ACR_NAME=acr$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 24 | head -n 1)
-# ACR_NAME="$(az acr list --resource-group $RESOURCE_GROUP --query [0].name -o tsv)"
+# ACR_NAME=acr$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 24 | head -n 1)
+ACR_NAME="$(az acr list --resource-group $RESOURCE_GROUP --query [0].name -o tsv)"
 
 # Create a container registry
 az acr create --name $ACR_NAME --resource-group $RESOURCE_GROUP --sku Premium --admin-enabled true --public-network-enabled false
@@ -14,8 +14,15 @@ export resourceid=$(az acr show --name $ACR_NAME --resource-group $RESOURCE_GROU
 # Create a private endpoint for the container registry and connect it to the subnet
 az network private-endpoint create --name acr-privateEndpoint --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --subnet $PV_SUBNET_NAME --private-connection-resource-id $resourceid --group-id registry --connection-name acr-connection
 
-# Create a private DNS zone and link it to the virtual network
+# Create a private DNS zone and link it to the virtual network (.azurecr.io)
 az network private-dns zone create --name privatelink.azurecr.io --resource-group $RESOURCE_GROUP
 az network private-dns link vnet create --resource-group $RESOURCE_GROUP --zone-name privatelink.azurecr.io --name ACR-DNSLink --virtual-network $VNET_NAME --registration-enabled false
+az network private-dns record-set a create --name $ACR_NAME --zone-name privatelink.azurecr.io --resource-group $RESOURCE_GROUP
+az network private-dns record-set a add-record --record-set-name $ACR_NAME --zone-name privatelink.azurecr.io --resource-group $RESOURCE_GROUP --ipv4-address $(az network private-endpoint show --name acr-privateEndpoint --resource-group $RESOURCE_GROUP --query "customDnsConfigs[0].ipAddresses[0]" --output tsv)
 
-az acr update --name $ACR_NAME --resource-group $RESOURCE_GROUP --public-network-enabled false
+# Create a second private DNS zone and link it to the virtual network ($LOCATION.data.azurecr.io)
+az network private-dns zone create --name $LOCATION.data.privatelink.azurecr.io --resource-group $RESOURCE_GROUP
+az network private-dns link vnet create --resource-group $RESOURCE_GROUP --zone-name $LOCATION.data.privatelink.azurecr.io --name ACR-DNSLink-2 --virtual-network $VNET_NAME --registration-enabled false
+az network private-dns record-set a create --name $ACR_NAME --zone-name $LOCATION.data.privatelink.azurecr.io --resource-group $RESOURCE_GROUP
+az network private-dns record-set a add-record --record-set-name $ACR_NAME --zone-name $LOCATION.data.privatelink.azurecr.io --resource-group $RESOURCE_GROUP --ipv4-address $(az network private-endpoint show --name acr-privateEndpoint --resource-group $RESOURCE_GROUP --query "customDnsConfigs[1].ipAddresses[0]" --output tsv)
+
