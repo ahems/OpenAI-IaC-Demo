@@ -16,11 +16,9 @@ az network private-endpoint create --name cogsvs-PrivateEndPoint --resource-grou
 
 az network private-dns zone create --name privatelink.cognitiveservices.azure.com --resource-group $RESOURCE_GROUP
 az network private-dns link vnet create --name cogsvs-privateDnsLink --resource-group $RESOURCE_GROUP --virtual-network $VNET_NAME --zone-name privatelink.cognitiveservices.azure.com --registration-enabled false
-az network private-dns record-set a create --name $CUSTOM_DOMAIN_NAME --zone-name privatelink.cognitiveservices.azure.com --resource-group $RESOURCE_GROUP
-az network private-dns record-set a add-record --record-set-name $CUSTOM_DOMAIN_NAME --zone-name privatelink.cognitiveservices.azure.com --resource-group $RESOURCE_GROUP --ipv4-address $(az network private-endpoint show --name cogsvs-privateEndpoint --resource-group $RESOURCE_GROUP --query "customDnsConfigs[0].ipAddresses[0]" --output tsv)
 
 az network private-dns zone create --name privatelink.openai.azure.com --resource-group $RESOURCE_GROUP
 az network private-dns link vnet create --name cogsvs-openai-privateDnsLink --resource-group $RESOURCE_GROUP --virtual-network $VNET_NAME --zone-name privatelink.openai.azure.com --registration-enabled false
-az network private-dns record-set a create --name $CUSTOM_DOMAIN_NAME --zone-name privatelink.openai.azure.com --resource-group $RESOURCE_GROUP
-az network private-dns record-set a add-record --record-set-name $CUSTOM_DOMAIN_NAME --zone-name privatelink.openai.azure.com --resource-group $RESOURCE_GROUP --ipv4-address $(az network private-endpoint show --name cogsvs-privateEndpoint --resource-group $RESOURCE_GROUP --query "customDnsConfigs[1].ipAddresses[0]" --output tsv)
 
+az network private-endpoint dns-zone-group create --endpoint-name cogsvs-privateEndpoint --name cogsvs-dns-zone-group --private-dns-zone privatelink.cognitiveservices.azure.com --zone-name privatelink.cognitiveservices.azure.com --resource-group $RESOURCE_GROUP
+az network private-endpoint dns-zone-group add --endpoint-name cogsvs-privateEndpoint --name cogsvs-dns-zone-group --private-dns-zone privatelink.openai.azure.com --zone-name privatelink.openai.azure.com --resource-group $RESOURCE_GROUP

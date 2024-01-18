@@ -16,12 +16,11 @@ az network private-endpoint create --name acr-privateEndpoint --resource-group $
 # Create a private DNS zone and link it to the virtual network (.azurecr.io)
 az network private-dns zone create --name privatelink.azurecr.io --resource-group $RESOURCE_GROUP
 az network private-dns link vnet create --resource-group $RESOURCE_GROUP --zone-name privatelink.azurecr.io --name ACR-DNSLink --virtual-network $VNET_NAME --registration-enabled false
-az network private-dns record-set a create --name $ACR_NAME --zone-name privatelink.azurecr.io --resource-group $RESOURCE_GROUP
-az network private-dns record-set a add-record --record-set-name $ACR_NAME --zone-name privatelink.azurecr.io --resource-group $RESOURCE_GROUP --ipv4-address $(az network private-endpoint show --name acr-privateEndpoint --resource-group $RESOURCE_GROUP --query "customDnsConfigs[0].ipAddresses[0]" --output tsv)
 
 # Create a second private DNS zone and link it to the virtual network ($LOCATION.data.azurecr.io)
 az network private-dns zone create --name $LOCATION.data.privatelink.azurecr.io --resource-group $RESOURCE_GROUP
 az network private-dns link vnet create --resource-group $RESOURCE_GROUP --zone-name $LOCATION.data.privatelink.azurecr.io --name ACR-DNSLink-2 --virtual-network $VNET_NAME --registration-enabled false
-az network private-dns record-set a create --name $ACR_NAME --zone-name $LOCATION.data.privatelink.azurecr.io --resource-group $RESOURCE_GROUP
-az network private-dns record-set a add-record --record-set-name $ACR_NAME --zone-name $LOCATION.data.privatelink.azurecr.io --resource-group $RESOURCE_GROUP --ipv4-address $(az network private-endpoint show --name acr-privateEndpoint --resource-group $RESOURCE_GROUP --query "customDnsConfigs[1].ipAddresses[0]" --output tsv)
+
+az network private-endpoint dns-zone-group create --endpoint-name acr-privateEndpoint --name acr-dns-zone-group --private-dns-zone privatelink.azurecr.io --zone-name privatelink.azurecr.io --resource-group $RESOURCE_GROUP
+az network private-endpoint dns-zone-group add --endpoint-name acr-privateEndpoint --name acr-dns-zone-group --private-dns-zone $LOCATION.data.privatelink.azurecr.io --zone-name $LOCATION.data.privatelink.azurecr.io --resource-group $RESOURCE_GROUP
 
