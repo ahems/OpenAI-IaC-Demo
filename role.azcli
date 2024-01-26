@@ -3,6 +3,7 @@ RESOURCE_GROUP='OpenAI-Demo'
 LOCATION=eastus
 
 az role definition create --role-definition custom-role-definition.json
+az role definition create --role-definition data-scientist-custom-role-definition.json
 
 az identity create --name $IDENTITY_NAME --resource-group $RESOURCE_GROUP --location $LOCATION
 

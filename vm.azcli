@@ -17,4 +17,4 @@ az vm create --name $VM_NAME --resource-group $RESOURCE_GROUP --image $VM_IMAGE 
 az network public-ip create --name BastionIP --resource-group $RESOURCE_GROUP --sku Standard --location $LOCATION
 
 # Create an Azure Bastion host
-az network bastion create --name BastionHost --public-ip-address BastionIP --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --location $LOCATION --no-wait
+az network bastion create --name BastionHost --public-ip-address BastionIP --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --location $LOCATION --enable-tunneling --no-wait

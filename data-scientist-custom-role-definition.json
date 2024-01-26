@@ -1,0 +1,14 @@
+{
+    "Name": "DataScientistCustom",
+    "IsCustom": true,
+    "Description": "Can run experiments on existing workspaces and create / delete compute.",
+    "Actions": ["*"],
+    "NotActions": [
+        "Microsoft.MachineLearningServices/workspaces/*/delete",
+        "Microsoft.MachineLearningServices/workspaces/write",
+        "Microsoft.Authorization/*/write"
+    ],
+    "AssignableScopes": [
+        "/subscriptions/a502b928-27fd-4054-b9fd-41d0a5b15113/resourceGroups/OpenAI-Demo/providers/Microsoft.MachineLearningServices/workspaces/7adbtc7abmmu76xlsjmht2tn"
+    ]
+}

@@ -1,0 +1,42 @@
+RESOURCE_GROUP='OpenAI-Demo'
+LOCATION=eastus
+VNET_NAME='vnet-1'
+FIREWALL_NAME='OpenAI-Demo-Firewall'
+FIREWALL_PIP_NAME='OpenAI-Demo-Firewall-PIP'
+ROUTE_TABLE_NAME='OpenAI-Demo-RouteTable'
+VM_SUBNET_NAME='VM-Subnet'
+
+# Create a firewall
+az network firewall create --name $FIREWALL_NAME --resource-group $RESOURCE_GROUP --location $LOCATION
+
+# Create a public IP
+az network public-ip create --name $FIREWALL_PIP_NAME --resource-group $RESOURCE_GROUP --location $LOCATION --allocation-method static --sku standard
+
+# Create an IP configuration
+az network firewall ip-config create --firewall-name $FIREWALL_NAME --name $FIREWALL_NAME-config --public-ip-address $FIREWALL_PIP_NAME --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME
+
+# Update the firewall
+az network firewall update --name $FIREWALL_NAME --resource-group $RESOURCE_GROUP
+
+# Show the public IP
+az network public-ip show --name $FIREWALL_NAME --resource-group $RESOURCE_GROUP
+
+# Get the private IP address of the firewall
+fwprivaddr="$(az network firewall ip-config list -g $RESOURCE_GROUP -f $FIREWALL_NAME --query "[?name=='$FIREWALL_NAME-config'].privateIpAddress" --output tsv)"
+
+# Create a route table
+az network route-table create --name $ROUTE_TABLE_NAME --resource-group $RESOURCE_GROUP --location $LOCATION
+
+# Create a route in the route table
+az network route-table route create --name InternetToFirewall --resource-group $RESOURCE_GROUP --route-table-name $ROUTE_TABLE_NAME --address-prefix 0.0.0.0/0 --next-hop-type VirtualAppliance --next-hop-ip-address $fwprivaddr
+
+# Associate the route table to a subnet
+az network vnet subnet update --name $VM_SUBNET_NAME --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --route-table $ROUTE_TABLE_NAME
+
+# Create rule to allow access to Azure Portal
+az network firewall network-rule create --collection-name default-rules --destination-ports '*' --firewall-name $FIREWALL_NAME --name AllowAzurePortal --protocols 'Any' --resource-group $RESOURCE_GROUP --source-addresses '*' --destination-addresses 'AzureActiveDirectory,AzurePortal,AzureFrontDoor.Frontend,AzureResourceManager,AzureMachineLearning'
+
+# Create a network rule to allow out Internet
+# az network firewall network-rule create --collection-name default-rules --destination-ports '*' --firewall-name $FIREWALL_NAME --name AllowInternet --protocols 'Any' --resource-group $RESOURCE_GROUP --source-addresses '*' --destination-addresses '0.0.0.0/0'
+
+

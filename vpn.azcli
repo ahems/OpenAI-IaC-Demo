@@ -1,0 +1,33 @@
+RESOURCE_GROUP='OpenAI-Demo'
+LOCATION=eastus
+VNET_NAME='vnet-1'
+VPN_Gateway_PIP_Name='VPN-Gateway-PIP'
+VPN_Gateway_Name='VPN-Gateway'
+USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 24 | head -n 1)
+PASSWORD=$(cat /dev/urandom | tr -dc [:graph:] | fold -w 24 | head -n 1)
+
+az network public-ip create --resource-group $RESOURCE_GROUP --name $VPN_Gateway_PIP_Name --allocation-method Static
+
+az network vnet-gateway create --resource-group $RESOURCE_GROUP --name $VPN_Gateway_Name --vnet $VNET_NAME --public-ip-address $VPN_Gateway_PIP_Name --gateway-type Vpn --sku VpnGw1 --vpn-type RouteBased --address-prefixes 192.168.0.0/24 --client-protocol OpenVPN --no-wait
+
+
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt install strongswan
+sudo apt install strongswan-pki
+sudo apt install libstrongswan-extra-plugins
+
+ipsec pki --gen --outform pem > caKey.pem
+ipsec pki --self --in caKey.pem --dn "CN=VPN CA" --ca --outform pem > caCert.pem
+
+openssl x509 -in caCert.pem -outform der | base64 -w0 ; echo
+
+ipsec pki --gen --outform pem > "${USERNAME}Key.pem"
+ipsec pki --pub --in "${USERNAME}Key.pem" | ipsec pki --issue --cacert caCert.pem --cakey caKey.pem --dn "CN=${USERNAME}" --san "${USERNAME}" --flag clientAuth --outform pem > "${USERNAME}Cert.pem"
+
+openssl pkcs12 -in "${USERNAME}Cert.pem" -inkey "${USERNAME}Key.pem" -certfile caCert.pem -export -out "${USERNAME}.p12" -password "pass:${PASSWORD}"
+ECHO $PASSWORD
+
+
+
+
