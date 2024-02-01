@@ -1,0 +1,15 @@
+managed_network:
+  isolation_mode: allow_only_approved_outbound
+  outbound_rules:
+  - name: pypi
+    destination: 'pypi.org'
+    type: fqdn
+  - name: python
+    destination: 'pypi.python.org'
+    type: fqdn
+  - name: pythonhosted
+    destination: 'pythonhosted.org'
+    type: fqdn
+  - name: pythonhostedfiles
+    destination: 'files.pythonhosted.org'
+    type: fqdn

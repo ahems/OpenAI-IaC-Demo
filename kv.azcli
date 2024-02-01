@@ -5,7 +5,7 @@ PV_SUBNET_NAME='PrivateLink-Subnet'
 KEYVAULT_NAME=kv$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 22 | head -n 1)
 
 # Create a key vault
-az keyvault create --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --location $LOCATION --public-network-access Disabled
+az keyvault create --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --location $LOCATION --public-network-access Disabled --enable-rbac-authorization true
 
 # Get the resource ID of the key vault
 export resourceid=$(az keyvault show --name $KEYVAULT_NAME --resource-group $RESOURCE_GROUP --query id --output tsv)

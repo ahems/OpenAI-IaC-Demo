@@ -11,5 +11,21 @@ OBJECT_ID=$(az ad sp list --display-name $IDENTITY_NAME --query '[].id' --output
 # Assign Custom role to User Managed identity
 az role assignment create --assignee-object-id $OBJECT_ID --role $ROLE_NAME --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP
 
+# Assign ML Data Scientist role to User Managed identity
+az role assignment create --assignee-object-id $OBJECT_ID --role 'AzureML Data Scientist' --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP
+az role assignment create --assignee-object-id $OBJECT_ID --role 'AzureML Compute Operator' --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP
+
+# Assign permissions to the Key Vault to User Managed identity
+KEYVAULT_ID=$(az keyvault list --resource-group $RESOURCE_GROUP --query '[0].name' -o tsv)
+az role assignment create --assignee-object-id $OBJECT_ID --role 'Key Vault Secrets Officer' --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/$KEYVAULT_ID
+
+COGSVS_ID=$(az cognitiveservices account list --resource-group $RESOURCE_GROUP --query '[0].name' -o tsv)
+az role assignment create --assignee-object-id $OBJECT_ID --role 'Cognitive Services OpenAI Contributor' --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.CognitiveServices/accounts/$COGSVS_ID
+
+# Assign permissions to the Storage Account to User Managed identity
+STORAGE_ID=$(az storage account list --resource-group $RESOURCE_GROUP --query '[0].name' -o tsv)
+az role assignment create --assignee-object-id $OBJECT_ID --role 'Storage Blob Data Contributor' --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ID
+az role assignment create --assignee-object-id $OBJECT_ID --role 'Storage Blob Data Reader' --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ID
+
 # Assign Custom Data Scientist Role to Data Scientist User
 az role assignment create --assignee $DATA_SCIENTIST_ID --role $DATA_SCIENTIST_CUSTOM_ROLE_NAME --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.MachineLearningServices/workspaces/7adbtc7abmmu76xlsjmht2tn

@@ -15,8 +15,7 @@
       "Microsoft.MachineLearningServices/workspaces/read",
       "Microsoft.MachineLearningServices/workspaces/write",
       "Microsoft.MachineLearningServices/workspaces/datastores/read",
-      "Microsoft.MachineLearningServices/workspaces/data/versions/write",
-      "Microsoft.MachineLearningServices/workspaces/datasets/registered/read"
+      "Microsoft.MachineLearningServices/workspaces/data/versions/write"
     ],
     "NotActions": [],
     "DataActions": [],
