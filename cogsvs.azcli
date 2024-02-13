@@ -11,7 +11,9 @@ az cognitiveservices account create --name $CUSTOM_DOMAIN_NAME --resource-group 
 # Get the resource ID of the cognitive services account
 resourceid=$(az cognitiveservices account show --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP --query id --output tsv)
 
+# az cognitiveservices model list
 #az cognitiveservices account deployment create --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP --deployment-name gpt-35-turbo --model-name gpt-35-turbo --model-version "1" --model-format OpenAI --sku-capacity 1 --sku-name "Standard"
+az cognitiveservices account deployment create --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP --model-name text-embedding-ada-002 --model-version "2" --model-format OpenAI --sku-capacity 1 --sku-name "Standard"
 
 # Create a private endpoint for the cognitive services account and connect it to the subnet
 az network private-endpoint create --name cogsvs-PrivateEndPoint --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --subnet $PV_SUBNET_NAME --private-connection-resource-id $resourceid --group-id account --connection-name cogsvs-connection
