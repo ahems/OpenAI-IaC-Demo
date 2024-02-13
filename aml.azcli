@@ -15,6 +15,7 @@ WORKSPACE_NAME=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 24 | head -n 1)
 az identity create --name $IDENTITY_NAME --resource-group $RESOURCE_GROUP --location $LOCATION
 IDENTITY_ID="$(az identity list --resource-group $RESOURCE_GROUP --query [0].id -o tsv)"
 
+# Create AML WOrkspace passing in Firewall rules via file outbound-firewall-rules.yml to allow out Internet 
 az ml workspace create --name $WORKSPACE_NAME --resource-group $RESOURCE_GROUP --public-network-access 'Disabled' --managed-network allow_only_approved_outbound --key-vault $KEYVAULT_NAME --container-registry $ACR_NAME --storage-account $STORAGE_NAME --file outbound-firewall-rules.yml
 
 az network private-endpoint create --name aml-privateEndpoint --connection-name aml-connection --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --subnet $PV_SUBNET_NAME --private-connection-resource-id $(az ml workspace show --name $WORKSPACE_NAME --resource-group $RESOURCE_GROUP --query id --output tsv) --group-id amlworkspace
