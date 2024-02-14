@@ -13,3 +13,6 @@ managed_network:
   - name: pythonhostedfiles
     destination: 'files.pythonhosted.org'
     type: fqdn
+  - name: mslearn
+    destination: 'mslearn.microsoft.com'
+    type: fqdn
