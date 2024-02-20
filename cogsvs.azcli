@@ -12,7 +12,7 @@ az cognitiveservices account create --name $CUSTOM_DOMAIN_NAME --resource-group 
 resourceid=$(az cognitiveservices account show --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP --query id --output tsv)
 
 # az cognitiveservices model list
-#az cognitiveservices account deployment create --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP --deployment-name gpt-35-turbo --model-name gpt-35-turbo --model-version "1" --model-format OpenAI --sku-capacity 1 --sku-name "Standard" --deployment-name OpenAI
+#az cognitiveservices account deployment create --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP --deployment-name gpt-35-turbo --model-name gpt-35-turbo --model-version "1" --model-format OpenAI --sku-capacity 1 --sku-name "Standard" --deployment-name gpt-35-turbo
 az cognitiveservices account deployment create --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP --model-name gpt-4 --model-version "613" --model-format OpenAI --sku-capacity 1 --sku-name "Standard" --deployment-name gpt-4-613
 
 # Create a private endpoint for the cognitive services account and connect it to the subnet
