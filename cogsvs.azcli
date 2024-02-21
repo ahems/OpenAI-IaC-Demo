@@ -3,6 +3,7 @@ LOCATION=canadaeast
 VNET_NAME='vnet-1'
 PV_SUBNET_NAME='PrivateLink-Subnet'
 CUSTOM_DOMAIN_NAME=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 24 | head -n 1)
+SUBSCRIPTION_ID=$(az account show --query id --output tsv)
 
 # Create a cognitive services account
 # Kind: az cognitiveservices account list-kinds
@@ -11,9 +12,11 @@ az cognitiveservices account create --name $CUSTOM_DOMAIN_NAME --resource-group 
 # Get the resource ID of the cognitive services account
 resourceid=$(az cognitiveservices account show --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP --query id --output tsv)
 
-# az cognitiveservices model list
 #az cognitiveservices account deployment create --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP --deployment-name gpt-35-turbo --model-name gpt-35-turbo --model-version "1" --model-format OpenAI --sku-capacity 1 --sku-name "Standard" --deployment-name gpt-35-turbo
 az cognitiveservices account deployment create --name $CUSTOM_DOMAIN_NAME --resource-group $RESOURCE_GROUP --model-name gpt-4 --model-version "613" --model-format OpenAI --sku-capacity 1 --sku-name "Standard" --deployment-name gpt-4-613
+
+# Configure data loss prevention (https://learn.microsoft.com/en-us/azure/ai-services/cognitive-services-data-loss-prevention?tabs=azure-cli)
+az rest -m patch -u /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.CognitiveServices/accounts/$CUSTOM_DOMAIN_NAME?api-version=2021-04-30 -b '{"properties": { "restrictOutboundNetworkAccess": true, "allowedFqdnList": [ ] }}'
 
 # Create a private endpoint for the cognitive services account and connect it to the subnet
 az network private-endpoint create --name cogsvs-PrivateEndPoint --resource-group $RESOURCE_GROUP --vnet-name $VNET_NAME --subnet $PV_SUBNET_NAME --private-connection-resource-id $resourceid --group-id account --connection-name cogsvs-connection
@@ -26,3 +29,6 @@ az network private-dns link vnet create --name cogsvs-openai-privateDnsLink --re
 
 az network private-endpoint dns-zone-group create --endpoint-name cogsvs-privateEndpoint --name cogsvs-dns-zone-group --private-dns-zone privatelink.cognitiveservices.azure.com --zone-name privatelink.cognitiveservices.azure.com --resource-group $RESOURCE_GROUP
 az network private-endpoint dns-zone-group add --endpoint-name cogsvs-privateEndpoint --name cogsvs-dns-zone-group --private-dns-zone privatelink.openai.azure.com --zone-name privatelink.openai.azure.com --resource-group $RESOURCE_GROUP
+
+# To view the current properties of this Azure AI services resource:
+# az rest -m get -u /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.CognitiveServices/accounts/$CUSTOM_DOMAIN_NAME?api-version=2021-04-30 
