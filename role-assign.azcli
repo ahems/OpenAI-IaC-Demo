@@ -19,6 +19,14 @@ az role assignment create --assignee-object-id $OBJECT_ID --role 'AzureML Comput
 KEYVAULT_ID=$(az keyvault list --resource-group $RESOURCE_GROUP --query '[0].name' -o tsv)
 az role assignment create --assignee-object-id $OBJECT_ID --role 'Key Vault Secrets Officer' --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/$KEYVAULT_ID
 
+# Assign permissions to the ACR to User Managed identity
+ACR_NAME="$(az acr list --resource-group $RESOURCE_GROUP --query [0].id -o tsv)"
+az role assignment create --assignee-object-id $OBJECT_ID --role 'Contributor' --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ContainerRegistry/registries/$ACR_NAME
+
+# Assign permissions to the Application Insights to User Managed identity
+APP_INSIGHTS_NAME="$(az monitor app-insights component show --resource-group $RESOURCE_GROUP --query [0].name -o tsv)"
+az role assignment create --assignee-object-id $OBJECT_ID --role 'Contributor' --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Insights/components/$APP_INSIGHTS_NAME
+
 COGSVS_ID=$(az cognitiveservices account list --resource-group $RESOURCE_GROUP --query '[0].name' -o tsv)
 az role assignment create --assignee-object-id $OBJECT_ID --role 'Cognitive Services OpenAI Contributor' --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.CognitiveServices/accounts/$COGSVS_ID
 
