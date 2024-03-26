@@ -1,0 +1,99 @@
+name: Deploy Enterprise Landing Zone Infrastructure
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+on:
+  workflow_dispatch:
+   inputs:
+    DELETE_EXISTING_RESOURCES:
+     description: 'Delete everything previously created first?'
+     required: true
+     type: boolean
+     default: false
+
+env:
+  BICEP_ROOT_PATH: infra/
+  DEPLOYMENT_LOCATION: eastus
+  HUB_RESOURCE_GROUP: ESLZ-HUB
+  SPOKE_RESOURCE_GROUP: ESLZ-SPOKE
+  FIREWALL_NAME: AZFW
+  vmSize: Standard_D4d_v5
+  SPOKE_VNET_NAME: VNet-SPOKE
+  HUB_VNET_NAME: VNet-HUB
+  SPOKE_SUBNET_NAME: servicespe
+  
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  VM_PW: ${{ secrets.VM_PW }}
+  OWNER: ${{ github.repository_owner }}
+  REPO: ${{ github.event.repository.name }} 
+ 
+jobs:
+  deploy_infrastructure:
+    runs-on: ubuntu-latest
+    name: 'Deploy Infrastructure'
+    steps:
+        
+      - name: Azure Login
+        uses: Azure/login@v1
+        if: ${{ env.AZURE_CLIENT_ID != '' && env.AZURE_TENANT_ID != '' && env.AZURE_SUBSCRIPTION_ID != ''}}
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Remove previous resources
+        uses: Azure/CLI@v1
+        if: ${{ inputs.DELETE_EXISTING_RESOURCES }}
+        continue-on-error: true
+        with:
+          azcliversion: latest
+          inlineScript: |
+          
+            az group delete -n ${{ env.HUB_RESOURCE_GROUP }} -y
+            az group delete -n ${{ env.SPOKE_RESOURCE_GROUP }} -y
+            
+      - name: Checkout IaC Templates
+        uses: actions/checkout@main
+
+      - name: Create ESLZ Hub
+        if: ${{ env.AZURE_SUBSCRIPTION_ID != '' }}
+        uses: azure/arm-deploy@v1
+        with:
+          deploymentName: ESLZ-HUB-AKS
+          scope: subscription
+          region: ${{ env.DEPLOYMENT_LOCATION }}
+          subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.HUB_RESOURCE_GROUP }}
+          template: ${{ env.BICEP_ROOT_PATH }}03-Network-Hub/main.bicep
+          parameters: ${{ env.BICEP_ROOT_PATH }}03-Network-Hub/parameters-main.json
+          failOnStdErr: false
+
+      - name: Create Random Name for Spoke KeyVault
+        run: | 
+        
+            # KEYVAULT_NAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 24 | head -n 1)
+            echo 'KEYVAULT_NAME=kv'$(uuidgen) | sed 's/-//g' | cut -c 1-38 >> $GITHUB_ENV
+
+      - name: Create Spoke
+        uses: azure/arm-deploy@v1
+        with:
+          deploymentName: ESLZ-SPOKE-AKS
+          template: ${{ env.BICEP_ROOT_PATH }}04-Network-LZ/main.bicep
+          parameters: ${{ env.BICEP_ROOT_PATH }}04-Network-LZ/parameters-main.json
+          scope: subscription
+          region: ${{ env.DEPLOYMENT_LOCATION }}
+          subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.SPOKE_RESOURCE_GROUP }}
+          failOnStdErr: false            
+            
+      - name: Log out
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+          
+            # Log out as per best practices for self-hosted runners (https://github.com/Azure/login#az-logout-and-security-hardening)          
+            az logout
+            az cache purge
+            az account clear
