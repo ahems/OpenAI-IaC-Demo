@@ -1,0 +1,53 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "rgName": {
+        "value": "ESLZ-SPOKE"
+      },
+      "cognitiveservicesLocation" : {
+        "value": "canadaeast"
+      },
+      "amlComputeDefaultVmSize" : { 
+        "value": "Standard_DS3_v2" 
+      },
+      "vnetSpokeName": {
+        "value": "VNet-SPOKE"
+      },
+      "spokeVNETaddPrefixes": {
+        "value": [
+          "10.1.0.0/16"
+        ]
+      },
+      "spokeSubnets": {
+        "value": [
+          {
+            "name": "default",
+            "properties": {
+              "addressPrefix": "10.1.0.0/24"
+            }
+          },
+          {
+            "name": "servicespe",
+            "properties": {
+              "addressPrefix": "10.1.1.0/24",
+              "privateEndpointNetworkPolicies": "Disabled"
+            }
+          }
+        ]
+      },
+      "vnetHubName": {
+        "value": "VNet-HUB"
+      },
+      "vnetHUBRGName": {
+        "value": "ESLZ-HUB"
+      },
+      "dhcpOptions": {
+        "value": {
+          "dnsServers": [
+            "10.0.1.4"
+          ]
+        }
+      }
+    }
+}

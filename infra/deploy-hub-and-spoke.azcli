@@ -1,0 +1,12 @@
+#az login --use-device-code --tenant 6341b30b-5010-4752-ac72-7efb6b0f8ff0
+az account set --subscription "Adam's Cloudy Demos"
+
+LOCATION=eastus
+VMPASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 24 | head -n 1)
+ENVIRONMENT_NAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 24 | head -n 1)
+
+#az deployment sub create --location $LOCATION --template-file hub.bicep --parameters hub.parameters.json --parameters adminPassword=$VMPASSWORD
+
+az group delete -n ESLZ-SPOKE -y
+az network vnet peering delete -g 'ESLZ-HUB' -n 'HUB-to-Spoke' --vnet-name 'VNet-HUB'
+az deployment sub create --location $LOCATION --template-file spoke.bicep --parameters spoke.parameters.json --parameters environmentName=$ENVIRONMENT_NAME

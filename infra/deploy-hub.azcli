@@ -1,0 +1,12 @@
+RESOURCE_GROUP='OpenAI-Demo'
+LOCATION=eastus
+VNET_NAME='vnet-1'
+PV_SUBNET_NAME='PrivateLink-Subnet'
+VM_SUBNET_NAME='VM-Subnet'
+
+#az login --use-device-code --tenant 6341b30b-5010-4752-ac72-7efb6b0f8ff0
+az account set --subscription "Adam's Cloudy Demos"
+
+VMPASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 24 | head -n 1)
+
+az deployment sub create --location $LOCATION --template-file hub.bicep --parameters hub.parameters.json --parameters adminPassword=$VMPASSWORD

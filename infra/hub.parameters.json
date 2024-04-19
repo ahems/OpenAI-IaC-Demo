@@ -1,0 +1,73 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "rgName": {
+        "value": "ESLZ-HUB"
+      },
+      "adminUsername": {
+          "value": "azureuser"
+      },
+      "vmSize": {
+        "value": "Standard_DS3_v2"
+      },
+      "virtualMachineName": {
+        "value": "jumpbox"
+      },
+      "availabilityZones": {
+        "value": [
+          "1",
+          "2",
+          "3"
+        ]
+      },
+      "vnetHubName": {
+        "value": "VNet-HUB"
+      },
+      "hubVNETaddPrefixes": {
+        "value": [
+          "10.0.0.0/16"
+        ]
+      },
+      "hubSubnets": {
+        "value": [
+          {
+            "name": "VM-Subnet",
+            "properties": {
+              "addressPrefix": "10.0.0.0/24"
+            }
+          },
+          {
+            "name": "AzureFirewallSubnet",
+            "properties": {
+              "addressPrefix": "10.0.1.0/26"
+            }
+          },
+          {
+            "name": "AzureFirewallManagementSubnet",
+            "properties": {
+              "addressPrefix": "10.0.4.0/26"
+            }
+          },
+          {
+            "name": "AzureBastionSubnet",
+            "properties": {
+              "addressPrefix": "10.0.2.0/27"
+            }
+          },
+          {
+            "name": "servicespe",
+            "properties": {
+              "addressPrefix": "10.0.3.0/27"
+            }
+          }
+        ]
+      },
+      "azfwName": {
+        "value": "AZFW"
+      },
+      "rtVMSubnetName":{
+        "value": "vm-subnet-rt"
+      }
+    }
+  }

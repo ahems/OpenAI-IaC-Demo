@@ -1,0 +1,9 @@
+RESOURCE_GROUP='ESLZ-SPOKE'
+LOCATION=eastus
+
+#az login --use-device-code --tenant 6341b30b-5010-4752-ac72-7efb6b0f8ff0
+az account set --subscription "Adam's Cloudy Demos"
+
+az group delete -n $RESOURCE_GROUP -y
+az network vnet peering delete -g 'ESLZ-HUB' -n 'HUB-to-Spoke' --vnet-name 'VNet-HUB'
+az deployment sub create --location $LOCATION --template-file spoke.bicep --parameters spoke.parameters.json --parameters environmentName=umbvp40dg2tfn9g
