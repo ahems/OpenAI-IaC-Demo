@@ -1,4 +1,4 @@
-name: Deploy Enterprise AML Infrastructure
+name: Deploy Enterprise Landing Zone Infrastructure
 permissions:
   id-token: write # This is required for requesting the JWT
   contents: read  # This is required for actions/checkout
@@ -10,15 +10,14 @@ on:
      required: true
      type: boolean
      default: false
+
 env:
   BICEP_ROOT_PATH: infra/
   DEPLOYMENT_LOCATION: eastus
   HUB_RESOURCE_GROUP: ESLZ-HUB
   SPOKE_RESOURCE_GROUP: ESLZ-SPOKE
   FIREWALL_NAME: AZFW
-  LOG_ANALYTICS_WORKSPACE_NAME: eslzlaworkspace
   vmSize: Standard_D4d_v5
-  RUNNER_VM_NAME: runner
   SPOKE_VNET_NAME: VNet-SPOKE
   HUB_VNET_NAME: VNet-HUB
   SPOKE_SUBNET_NAME: servicespe
@@ -58,71 +57,24 @@ jobs:
       - name: Checkout IaC Templates
         uses: actions/checkout@main
 
-      - name: Generate Random Resources Names
-        run: | 
-        
-            echo 'KEYVAULT_NAME=kv'$(uuidgen) | sed 's/-//g' | cut -c 1-38 >> $GITHUB_ENV
-            echo 'ACR_NAME=cr'$(uuidgen) | sed 's/-//g' | cut -c 1-33 >> $GITHUB_ENV
-            echo 'STORAGE_ACCOUNT_NAME=s'$(uuidgen) | sed 's/-//g' | cut -c 1-45 >> $GITHUB_ENV
-        
       - name: Create ESLZ Hub
         if: ${{ env.AZURE_SUBSCRIPTION_ID != '' }}
         uses: azure/arm-deploy@v1
         with:
-          deploymentName: ESLZ-HUB-AML
+          deploymentName: ESLZ-HUB-AKS
           scope: subscription
           region: ${{ env.DEPLOYMENT_LOCATION }}
           subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.HUB_RESOURCE_GROUP }}
-          template: ${{ env.BICEP_ROOT_PATH }}networking/hub.bicep
-          parameters: ${{ env.BICEP_ROOT_PATH }}networking/parameters-hub.json
+          template: ${{ env.BICEP_ROOT_PATH }}03-Network-Hub/main.bicep
+          parameters: ${{ env.BICEP_ROOT_PATH }}03-Network-Hub/parameters-main.json
           failOnStdErr: false
 
-      - name: Get CIDR of VM Subnet
-        uses: Azure/CLI@v1
-        with:
-          azcliversion: latest
-          inlineScript: |
-          
-            VM_SUBNET_CIDR="$(az network vnet subnet show --resource-group ${{ env.HUB_RESOURCE_GROUP }} --name vmsubnet --vnet-name VNet-HUB --query addressPrefix --output tsv)"
-            echo 'VM_SUBNET_CIDR='$VM_SUBNET_CIDR >> $GITHUB_ENV
-
-      - name: Update Firewall to allow VMs out
-        uses: Azure/CLI@v1
-        with:
-          azcliversion: latest
-          inlineScript: |
-          
-            az config set extension.use_dynamic_install=yes_without_prompt
-          
-            # Allow VM's out
-            az network firewall network-rule create --collection-name 'runner-egress' --destination-ports '*' --dest-addr '*' --firewall-name ${{ env.FIREWALL_NAME }} --name 'Allow-Runner-Egress' --protocols Tcp --resource-group ${{ env.HUB_RESOURCE_GROUP }} --action Allow --source-addresses '${{ env.VM_SUBNET_CIDR }}' --priority 360
-            
-      - name: Create Jumpbox VM
-        if: ${{ env.AZURE_SUBSCRIPTION_ID != '' && env.VM_PW != '' }}
-        uses: azure/arm-deploy@v1
-        with:
-          deploymentName: ESLZ-HUB-VM
-          template: ${{ env.BICEP_ROOT_PATH }}03-Network-Hub/deploy-vm.bicep
-          parameters: ${{ env.BICEP_ROOT_PATH }}03-Network-Hub/parameters-deploy-vm.json adminPassword=${{ env.VM_PW }}
-          scope: subscription
-          region: ${{ env.DEPLOYMENT_LOCATION }}
-          subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
-          resourceGroupName: ${{ env.HUB_RESOURCE_GROUP }}
-          failOnStdErr: false
-            
-      - name: Create User Defined Route
-        if: ${{ env.AZURE_SUBSCRIPTION_ID != '' }}
-        uses: azure/arm-deploy@v1
-        with:
-          deploymentName: ESLZ-AKS-HUB-UDR
-          template: ${{ env.BICEP_ROOT_PATH }}03-Network-Hub/updateUDR.bicep
-          parameters: ${{ env.BICEP_ROOT_PATH }}03-Network-Hub/parameters-updateUDR.json
-          scope: subscription
-          region: ${{ env.DEPLOYMENT_LOCATION }}
-          subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
-          resourceGroupName: ${{ env.HUB_RESOURCE_GROUP }}
-          failOnStdErr: false
+      - name: Create Random Name for Spoke KeyVault
+        run: | 
+        
+            # KEYVAULT_NAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 24 | head -n 1)
+            echo 'KEYVAULT_NAME=kv'$(uuidgen) | sed 's/-//g' | cut -c 1-38 >> $GITHUB_ENV
 
       - name: Create Spoke
         uses: azure/arm-deploy@v1
@@ -136,10 +88,12 @@ jobs:
           resourceGroupName: ${{ env.SPOKE_RESOURCE_GROUP }}
           failOnStdErr: false            
             
-      - name: Configure AKS Subnet
+      - name: Log out
         uses: azure/CLI@v1
         with:
           inlineScript: |
-
-             az network vnet subnet update --vnet-name ${{ env.SPOKE_VNET_NAME }} --name ${{ env.AKS_SUBNET }} --resource-group ${{ env.SPOKE_RESOURCE_GROUP }} --route-table ${{ env.AKS_ROUTE_TABLE }} --network-security-group ${{ env.AKS_NSG }}
-
+          
+            # Log out as per best practices for self-hosted runners (https://github.com/Azure/login#az-logout-and-security-hardening)          
+            az logout
+            az cache purge
+            az account clear
