@@ -1,4 +1,5 @@
 *.pem
 *.p12
-
+.env
+.azcli
 /.azure
